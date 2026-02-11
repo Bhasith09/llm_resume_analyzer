@@ -4,4 +4,4 @@
 TARGET_ROLE = "Machine Learning Engineer"
 
 # Hugging Face model name (you can change this later)
-HF_MODEL_NAME = "google/flan-t5-base"
+HF_MODEL_NAME = "google/flan-t5-small"
