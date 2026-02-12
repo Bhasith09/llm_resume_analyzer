@@ -1,7 +1,12 @@
 # config.py
-
-# Target role for which we evaluate the resume
+import os
+from dotenv import load_dotenv
+load_dotenv()
 TARGET_ROLE = "Machine Learning Engineer"
 
-# Hugging Face model name (you can change this later)
-HF_MODEL_NAME = "google/flan-t5-small"
+# Groq model name
+GROQ_MODEL = "llama-3.1-8b-instant"
+
+
+# Add your API key here (or load from environment variable)
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
