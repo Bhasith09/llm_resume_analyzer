@@ -1,8 +1,10 @@
+# app.py
+
 import streamlit as st
 from parsing import extract_text_from_pdf
 from resume_chain import analyze_resume
 from config import TARGET_ROLE
-from pdf_generator import create_pdf_report
+
 
 st.set_page_config(page_title="Groq Resume Analyzer", page_icon="📄")
 
@@ -26,14 +28,3 @@ if uploaded_file is not None:
                 feedback = analyze_resume(resume_text, target_role)
                 st.subheader("Analysis Result")
                 st.markdown(feedback)
-
-                # Generate PDF
-                pdf_bytes = create_pdf_report(feedback)
-
-                # Download button
-                st.download_button(
-                    label="📥 Download PDF Report",
-                    data=pdf_bytes,
-                    file_name="resume_analysis_report.pdf",
-                    mime="application/pdf"
-                )
