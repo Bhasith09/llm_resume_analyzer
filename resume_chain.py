@@ -1,5 +1,3 @@
-# resume_chain.py
-
 import os
 from dotenv import load_dotenv
 from groq import Groq
@@ -14,7 +12,7 @@ if not api_key:
 
 client = Groq(api_key=api_key)
 
-# NEW WORKING MODEL
+# Working model
 MODEL_NAME = "openai/gpt-oss-safeguard-20b"
 
 
@@ -59,6 +57,44 @@ Do NOT include:
 
 Resume:
 {resume_text}
+"""
+    response = client.chat.completions.create(
+        model=MODEL_NAME,
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.2,
+    )
+    return response.choices[0].message.content
+
+
+def compare_two_resumes(resume_a: str, resume_b: str) -> str:
+    prompt = f"""
+You are an expert technical recruiter. Compare the following two resumes.
+
+Resume A:
+{resume_a}
+
+Resume B:
+{resume_b}
+
+Provide a structured comparison with the following sections:
+
+1. Summary of Candidate A
+2. Summary of Candidate B
+3. Technical Skills Comparison
+4. Soft Skills Comparison
+5. Experience Comparison (roles, industries, seniority)
+6. Achievements Comparison
+7. Strengths of Candidate A
+8. Strengths of Candidate B
+9. Final Recruiter Verdict:
+   - Who is more suitable for a senior role?
+   - Who is more suitable for a junior/mid role?
+   - Which candidate is more versatile?
+
+Do NOT include:
+- Improvement suggestions
+- ATS optimization
+- Cover letter style content
 """
     response = client.chat.completions.create(
         model=MODEL_NAME,
