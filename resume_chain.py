@@ -50,3 +50,39 @@ def analyze_resume(resume_text: str, target_role: str = TARGET_ROLE) -> str:
     )
 
     return response.choices[0].message.content
+def match_resume_to_job(resume_text: str, job_description: str) -> str:
+    prompt = f"""
+You are an ATS (Applicant Tracking System) specializing in job matching.
+
+Compare the following RESUME and JOB DESCRIPTION.
+
+RESUME:
+{resume_text}
+
+JOB DESCRIPTION:
+{job_description}
+
+Provide the following sections:
+
+### 1. Match Score (0–100) with explanation
+
+### 2. Missing Skills (bullet points)
+
+### 3. Required Tools/Technologies (bullet points)
+
+### 4. Keywords to Add (bullet points)
+
+### 5. Tailored Suggestions to Improve Match (5 items)
+"""
+
+    response = client.chat.completions.create(
+        model=GROQ_MODEL,
+        messages=[
+            {"role": "system", "content": "You are an ATS job-matching engine."},
+            {"role": "user", "content": prompt}
+        ],
+        temperature=0.3,
+        max_tokens=800,
+    )
+
+    return response.choices[0].message.content
