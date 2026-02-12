@@ -1,88 +1,127 @@
 # resume_chain.py
 
+import os
+from dotenv import load_dotenv
 from groq import Groq
-from config import GROQ_API_KEY, GROQ_MODEL, TARGET_ROLE
 
-client = Groq(api_key=GROQ_API_KEY)
+# Load .env file
+load_dotenv()
 
-PROMPT_TEMPLATE = """
-You are an expert technical recruiter specializing in {target_role} roles.
+# Read your EXACT variable name
+api_key = os.getenv("GROQ_API_KEY")
 
-Your task is to evaluate the resume below and produce a structured, detailed, and ORIGINAL analysis.
+if not api_key:
+    raise ValueError("❌ GROQ_API_KEY not found. Check your .env file.")
 
-RULES:
-- Do NOT repeat the resume text.
-- Do NOT repeat the instructions.
-- Keep each section concise but insightful.
-- Use bullet points where appropriate.
-- Make the output clean and well formatted.
+# Initialize Groq client using your key
+client = Groq(api_key=api_key)
 
-RESUME:
+# -----------------------------
+# NEW MODEL NAME (IMPORTANT)
+MODEL_NAME = "llama3-70b-8192"
+# -----------------------------
+
+
+def analyze_resume(resume_text: str, target_role: str) -> str:
+    prompt = f"""
+You are an expert resume reviewer. Analyze the following resume for the target role: {target_role}.
+
+Resume:
 {resume_text}
 
-Now produce the following sections EXACTLY in this order:
-
-### 1. Candidate Summary (3–4 lines)
-
-### 2. Score for {target_role} (1–10) + Justification
-
-### 3. Key Strengths (4–6 bullet points)
-
-### 4. Key Weaknesses / Gaps (3–5 bullet points)
-
-### 5. Actionable Suggestions (5 items)
+Provide:
+- Overall summary
+- Strengths
+- Weaknesses
+- Suggestions to improve
+- How well it fits the target role
 """
-
-def analyze_resume(resume_text: str, target_role: str = TARGET_ROLE) -> str:
-    prompt = PROMPT_TEMPLATE.format(
-        resume_text=resume_text,
-        target_role=target_role
-    )
-
     response = client.chat.completions.create(
-        model=GROQ_MODEL,
-        messages=[
-            {"role": "system", "content": "You are an expert resume evaluator."},
-            {"role": "user", "content": prompt}
-        ],
+        model=MODEL_NAME,
+        messages=[{"role": "user", "content": prompt}],
         temperature=0.3,
-        max_tokens=800,
     )
+    return response.choices[0].message["content"]
 
-    return response.choices[0].message.content
+
 def match_resume_to_job(resume_text: str, job_description: str) -> str:
     prompt = f"""
-You are an ATS (Applicant Tracking System) specializing in job matching.
+You are an expert hiring manager. Compare this resume to the job description.
 
-Compare the following RESUME and JOB DESCRIPTION.
-
-RESUME:
+Resume:
 {resume_text}
 
-JOB DESCRIPTION:
+Job Description:
 {job_description}
 
-Provide the following sections:
-
-### 1. Match Score (0–100) with explanation
-
-### 2. Missing Skills (bullet points)
-
-### 3. Required Tools/Technologies (bullet points)
-
-### 4. Keywords to Add (bullet points)
-
-### 5. Tailored Suggestions to Improve Match (5 items)
+Provide:
+- Match percentage (0–100)
+- Key strengths vs job
+- Gaps vs job
+- Final verdict (short)
 """
-
     response = client.chat.completions.create(
-        model=GROQ_MODEL,
-        messages=[
-            {"role": "system", "content": "You are an ATS job-matching engine."},
-            {"role": "user", "content": prompt}
-        ],
+        model=MODEL_NAME,
+        messages=[{"role": "user", "content": prompt}],
         temperature=0.3,
-        max_tokens=800,
     )
+    return response.choices[0].message["content"]
 
-    return response.choices[0].message.content
+
+def generate_cover_letter(resume_text: str, job_description: str, target_role: str) -> str:
+    prompt = f"""
+You are an expert cover letter writer.
+
+Write a professional, concise, and tailored cover letter for the role: {target_role}.
+
+Use the resume and job description below.
+
+Resume:
+{resume_text}
+
+Job Description:
+{job_description}
+
+Requirements:
+- 3–5 short paragraphs
+- Clear structure (intro, skills, alignment, closing)
+- Friendly but professional tone
+- No generic fluff
+"""
+    response = client.chat.completions.create(
+        model=MODEL_NAME,
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.4,
+    )
+    return response.choices[0].message["content"]
+
+
+def ats_score_analysis(resume_text: str, job_description: str) -> str:
+    prompt = f"""
+You are an ATS (Applicant Tracking System) scanner. Analyze the resume against the job description.
+
+Resume:
+{resume_text}
+
+Job Description:
+{job_description}
+
+Provide a structured ATS report with the following sections:
+
+1. ATS Score (0–100)
+2. Keyword Match Score (0–100)
+3. Matched Keywords
+4. Missing Keywords
+5. Missing Technical Skills
+6. Missing Soft Skills
+7. Experience Gaps or Red Flags
+8. ATS Optimization Suggestions (very specific and actionable)
+
+Make the output clean, bullet‑pointed, and easy to read.
+"""
+    response = client.chat.completions.create(
+        model=MODEL_NAME,
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.2,
+    )
+    return response.choices[0].message["content"]
