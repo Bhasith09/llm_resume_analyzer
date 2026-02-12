@@ -7,6 +7,7 @@ from resume_chain import (
     match_resume_to_job,
     generate_cover_letter,
     ats_score_analysis,
+    recruiter_resume_summary,
 )
 from config import TARGET_ROLE
 from pdf_generator import create_pdf_report, create_cover_letter_docx
@@ -26,8 +27,8 @@ if "feedback" not in st.session_state:
 if "ats_report" not in st.session_state:
     st.session_state.ats_report = ""
 
-st.title("📄 LLaMA‑3 Powered Resume Analyzer (Groq API)")
-st.write("Upload your resume and get a fast, high‑quality AI evaluation.")
+st.title("📄 LLaMA‑powered Resume Analyzer (Groq API)")
+st.write("Upload your resume and get a tailored AI evaluation based on who you are.")
 
 # User type toggle
 user_type = st.radio(
@@ -37,7 +38,7 @@ user_type = st.radio(
 )
 
 # Inputs
-target_role = st.text_input("Target Role", value=TARGET_ROLE)
+target_role = st.text_input("Target Role", value=TARGET_ROLE if user_type == "Job Seeker" else "")
 job_description = st.text_area("Paste Job Description (Optional)")
 uploaded_file = st.file_uploader("Upload your resume (PDF)", type=["pdf"])
 
@@ -46,23 +47,31 @@ if uploaded_file is not None:
     st.success("Resume uploaded successfully.")
 
     if st.button("Analyze Resume"):
-        with st.spinner("Analyzing your resume using Groq LLaMA‑3..."):
+        with st.spinner("Analyzing your resume using Groq..."):
 
             st.session_state.resume_text = extract_text_from_pdf(uploaded_file)
 
             if not st.session_state.resume_text.strip():
                 st.error("Could not extract text from the PDF.")
             else:
-                # Resume Analysis
                 st.subheader("Resume Analysis")
-                st.session_state.feedback = analyze_resume(
-                    st.session_state.resume_text,
-                    target_role,
-                )
+
+                if user_type == "Job Seeker":
+                    # Detailed, improvement-focused analysis
+                    st.session_state.feedback = analyze_resume(
+                        st.session_state.resume_text,
+                        target_role,
+                    )
+                else:
+                    # Recruiter-focused summary (skills, experience, profile)
+                    st.session_state.feedback = recruiter_resume_summary(
+                        st.session_state.resume_text
+                    )
+
                 st.markdown(st.session_state.feedback)
 
-                # Job Match Analysis
-                if job_description.strip():
+                # Job Match + ATS only for Job Seekers
+                if user_type == "Job Seeker" and job_description.strip():
                     st.subheader("Job Match Analysis")
                     match_report = match_resume_to_job(
                         st.session_state.resume_text,
@@ -70,7 +79,6 @@ if uploaded_file is not None:
                     )
                     st.markdown(match_report)
 
-                    # ATS Score & Optimization
                     st.subheader("ATS Score & Optimization")
                     st.session_state.ats_report = ats_score_analysis(
                         st.session_state.resume_text,
@@ -78,8 +86,8 @@ if uploaded_file is not None:
                     )
                     st.markdown(st.session_state.ats_report)
 
-# Cover Letter Generator
-if st.session_state.resume_text:
+# Cover Letter Generator — only for Job Seekers
+if user_type == "Job Seeker" and st.session_state.resume_text:
     if st.button("Generate Cover Letter"):
         with st.spinner("Creating your personalized cover letter..."):
             st.session_state.cover_letter = generate_cover_letter(
@@ -88,8 +96,8 @@ if st.session_state.resume_text:
                 target_role,
             )
 
-# Show Cover Letter
-if st.session_state.cover_letter:
+# Show Cover Letter (Job Seekers only)
+if user_type == "Job Seeker" and st.session_state.cover_letter:
     st.subheader("Cover Letter")
 
     st.markdown(
@@ -97,7 +105,6 @@ if st.session_state.cover_letter:
         unsafe_allow_html=True,
     )
 
-    # Download Cover Letter as Word (.docx)
     docx_file = create_cover_letter_docx(st.session_state.cover_letter)
 
     st.download_button(
@@ -107,7 +114,7 @@ if st.session_state.cover_letter:
         mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     )
 
-# Resume Analysis PDF Download
+# Resume Analysis PDF Download (both modes)
 if st.session_state.feedback:
     pdf_bytes = create_pdf_report(
         "Resume Analysis:\n\n" + st.session_state.feedback,

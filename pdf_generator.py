@@ -3,19 +3,12 @@
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from reportlab.lib.utils import simpleSplit
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.enums import TA_JUSTIFY
 from io import BytesIO
 
-# For DOCX
 from docx import Document
 from docx.shared import Pt
 
 
-# ---------------------------------------------------------
-# Resume Analysis PDF (unchanged)
-# ---------------------------------------------------------
 def create_pdf_report(text: str) -> bytes:
     buffer = BytesIO()
     pdf = canvas.Canvas(buffer, pagesize=letter)
@@ -41,9 +34,6 @@ def create_pdf_report(text: str) -> bytes:
     return buffer.read()
 
 
-# ---------------------------------------------------------
-# Cover Letter DOCX (Word file)
-# ---------------------------------------------------------
 def create_cover_letter_docx(cover_letter_text: str) -> bytes:
     doc = Document()
 

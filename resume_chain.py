@@ -7,41 +7,65 @@ from groq import Groq
 # Load .env file
 load_dotenv()
 
-# Read your EXACT variable name
 api_key = os.getenv("GROQ_API_KEY")
 
 if not api_key:
-    raise ValueError("❌ GROQ_API_KEY not found. Check your .env file.")
+    raise ValueError("❌ GROQ_API_KEY not found in .env file.")
 
-# Initialize Groq client using your key
 client = Groq(api_key=api_key)
 
-# -----------------------------
-# NEW MODEL NAME (IMPORTANT)
-MODEL_NAME = "llama3-70b-8192"
-# -----------------------------
+# NEW WORKING MODEL
+MODEL_NAME = "openai/gpt-oss-safeguard-20b"
 
 
 def analyze_resume(resume_text: str, target_role: str) -> str:
     prompt = f"""
-You are an expert resume reviewer. Analyze the following resume for the target role: {target_role}.
+You are an expert resume reviewer helping a job seeker. Analyze the following resume for the target role: {target_role}.
 
 Resume:
 {resume_text}
 
 Provide:
-- Overall summary
-- Strengths
-- Weaknesses
-- Suggestions to improve
-- How well it fits the target role
+1. Overall summary
+2. Strengths
+3. Weaknesses
+4. Very specific improvement suggestions
+5. How well it fits the target role
+6. Practical tips to make this resume more attractive to recruiters and ATS
 """
     response = client.chat.completions.create(
         model=MODEL_NAME,
         messages=[{"role": "user", "content": prompt}],
         temperature=0.3,
     )
-    return response.choices[0].message["content"]
+    return response.choices[0].message.content
+
+
+def recruiter_resume_summary(resume_text: str) -> str:
+    prompt = f"""
+You are an expert technical recruiter. Analyze the resume and provide ONLY the following:
+
+1. Short summary of candidate background
+2. Key technical skills
+3. Key soft skills
+4. Relevant experience (roles, domains, industries)
+5. Notable achievements
+6. Overall candidate profile (1–2 lines)
+
+Do NOT include:
+- Suggestions or improvements
+- ATS optimization advice
+- Cover letter style content
+
+Resume:
+{resume_text}
+"""
+    response = client.chat.completions.create(
+        model=MODEL_NAME,
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.2,
+    )
+    return response.choices[0].message.content
 
 
 def match_resume_to_job(resume_text: str, job_description: str) -> str:
@@ -65,7 +89,7 @@ Provide:
         messages=[{"role": "user", "content": prompt}],
         temperature=0.3,
     )
-    return response.choices[0].message["content"]
+    return response.choices[0].message.content
 
 
 def generate_cover_letter(resume_text: str, job_description: str, target_role: str) -> str:
@@ -93,7 +117,7 @@ Requirements:
         messages=[{"role": "user", "content": prompt}],
         temperature=0.4,
     )
-    return response.choices[0].message["content"]
+    return response.choices[0].message.content
 
 
 def ats_score_analysis(resume_text: str, job_description: str) -> str:
@@ -124,4 +148,4 @@ Make the output clean, bullet‑pointed, and easy to read.
         messages=[{"role": "user", "content": prompt}],
         temperature=0.2,
     )
-    return response.choices[0].message["content"]
+    return response.choices[0].message.content
