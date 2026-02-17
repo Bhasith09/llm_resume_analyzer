@@ -14,6 +14,7 @@ def create_pdf_report(text: str) -> bytes:
     pdf = canvas.Canvas(buffer, pagesize=letter)
 
     width, height = letter
+    print(letter)
     y = height - 50
 
     pdf.setFont("Helvetica", 11)

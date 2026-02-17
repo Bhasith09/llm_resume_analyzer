@@ -1,3 +1,4 @@
+#app.py
 import streamlit as st
 from parsing import extract_text_from_pdf
 from resume_chain import (
@@ -15,7 +16,7 @@ st.set_page_config(page_title="Groq Resume Analyzer", page_icon="📄")
 
 # Session State
 if "resume_text" not in st.session_state:
-    st.session_state.resume_text = ""
+    st.session_state.resume_text = "" 
 
 if "cover_letter" not in st.session_state:
     st.session_state.cover_letter = ""
