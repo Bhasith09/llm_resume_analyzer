@@ -131,7 +131,7 @@ if user_type == "Recruiter":
                 st.markdown(comparison_result)
 
 # Resume Analysis PDF Download (both modes)
-if st.session_state.feedback:
+if st.session_state.feedback: 
     pdf_bytes = create_pdf_report(
         "Resume Analysis:\n\n" + st.session_state.feedback,
     )
